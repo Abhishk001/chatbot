@@ -40,6 +40,12 @@ To run this project locally, follow the steps below for both the backend and fro
    uvicorn backend:app --reload
    ```
 
+Note: If some packages are missing or not listed in requirements.txt, you may encounter errors when running the application. In that case, you can manually install the missing packages:
+```bash
+pip install <package-name>
+```
+
+
 > Ensure the file is named `backend.py` and it contains:
 > ```python
 > from fastapi import FastAPI
