@@ -3,72 +3,56 @@ import React, { useRef } from 'react';
 function Chatform({ setChatHistory }) {
   const inputRef = useRef();
 
-  // To handle POST request
-  const sendMessageToAPI = async (query) => {
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    const message = inputRef.current.value.trim();
+    if (!message) return;
+    inputRef.current.value = '';
+
+    // Add user's message and "Thinking..." placeholder
+    setChatHistory((prev) => [
+      ...prev,
+      { role: 'user', text: message },
+      { role: 'model', text: 'Thinking...' },
+    ]);
+
     try {
-      const response = await fetch('http://127.0.0.1:8000/chat', {
+      const res = await fetch('http://127.0.0.1:8000/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }), // Send the message as JSON with the "query" key
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: message }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send message to the API');
-      }
+      if (!res.ok) throw new Error('API error');
 
-      const data = await response.json();
-      return data;
+      const data = await res.json();
+      const reply = typeof data === 'string' ? data : data.reply || data.message || 'No reply';
+
+      // Replace "Thinking..." with actual response
+      setChatHistory((prev) => [
+        ...prev.slice(0, -1),
+        { role: 'model', text: reply },
+      ]);
     } catch (error) {
-      console.error(error.message);
-      return { reply: 'Error: Unable to reach API' }; // Fallback response
+      console.error('Error:', error);
+      setChatHistory((prev) => [
+        ...prev.slice(0, -1),
+        { role: 'model', text: 'Error: Could not reach the server.' },
+      ]);
     }
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    const userMessage = inputRef.current.value.trim();
-    if (!userMessage) return;
-    inputRef.current.value = '';
-
-   
-    setChatHistory((history) => [
-      ...history,
-      { role: 'user', text: userMessage },
-    ]);
-
-    // Add placeholder for bot response
-    setChatHistory((history) => [
-      ...history,
-      { role: 'model', text: 'Thinking.....' },
-    ]);
-
-    const botResponse = await sendMessageToAPI(userMessage);
-    console.log(botResponse);
-    
-
-    // Update thinking... to actual message
-    setChatHistory((history) => [
-      ...history.slice(0, -1),
-      { role: 'model', text: botResponse },
-    ]);
-  };
-
   return (
-    <form
-      className="flex items-center justify-between px-5 py-3 rounded-full border-1 border-gray-600"
-      onSubmit={handleFormSubmit}
-    >
+    <form onSubmit={handleFormSubmit} className="flex items-center px-5 py-3 rounded-full border border-gray-600">
       <input
         ref={inputRef}
         type="text"
         placeholder="messages..."
         required
-        spellCheck='false'
-        className="outline-none text-xs placeholder-gray-500 text-gray-900 w-full"
+        spellCheck="false"
+        className="outline-none text-sm placeholder-gray-500 text-gray-900 w-full"
       />
-      <button className="material-symbols-rounded bg-gray rounded-full text-white p-1 bg-[#2f05a1]">
+      <button type="submit" className="material-symbols-rounded bg-[#2f05a1] text-white p-1 rounded-full">
         keyboard_arrow_right
       </button>
     </form>
@@ -76,59 +60,3 @@ function Chatform({ setChatHistory }) {
 }
 
 export default Chatform;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, {useRef} from 'react'
-
-// function Chatform({setChatHistory}) {
-//   const inputRef = useRef();
-
-//   const handleFormSubmit = (e) => {
-//     e.preventDefault();
-//     const userMessage = inputRef.current.value.trim();
-//     if(!userMessage) return;
-//     inputRef.current.value = '';
-//     // console.log(userMessage)
-
-//     setChatHistory((history) => [...history, {role: 'user', text: userMessage}])
-//     setTimeout(() => setChatHistory((history) => [...history, {role: 'model', text: 'Thinking.....'}]), 600)
-//   }
-
-//   return (
-//     <form action="#" className="flex items-center justify-between px-5 py-3 rounded-full border-1 border-gray-600" onSubmit={handleFormSubmit}>
-//     <input ref={inputRef} type="text" placeholder="messages..." required  className="outline-none placeholder-gray-500 text-gray-900 w-full valid:not-[button]:block"/>
-//     <button className="material-symbols-rounded bg-gray rounded-full text-white p-1 bg-[#6D4FC2]">keyboard_arrow_right</button>
-//   </form>
-//   )
-// }
-
-// export default Chatform
